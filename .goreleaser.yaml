@@ -10,5 +10,5 @@ builds:
 
 archives:
   - files:
-      - src: './manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
+      - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
         dst: ./manifest.yml
