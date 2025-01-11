@@ -38,9 +38,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a
         with:
-          go-version-file: 'go.mod'
+            ref: ${{ inputs.version_number }}
       - name: Generate manifest files
         env:
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
@@ -50,7 +49,6 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf
         with:
-          version: '~> v2'
           args: release --clean        
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
