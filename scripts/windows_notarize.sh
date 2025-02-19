@@ -2,6 +2,8 @@
 
 set -Eeou pipefail
 
+echo "TEMP signing ${artifact}"
+
 if [[ -f "${artifact:?}" ]]; then
 	echo "signing ${artifact}"
 

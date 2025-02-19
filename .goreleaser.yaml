@@ -32,9 +32,18 @@ builds:
             - artifact="{{ .Path }}"
 
 archives:
-  - files:
-      - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
-        dst: ./manifest.yml
+  - id: linux
+    builds: [linux]
+    <<: &archive_defaults
+      files:
+        - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
+          dst: ./manifest.yml
+  - id: macos
+    builds: [macos]
+    <<: *archive_defaults
+  - id: windows
+    builds: [windows]
+    <<: *archive_defaults
 
 signs:
   - id: all_artifacts
