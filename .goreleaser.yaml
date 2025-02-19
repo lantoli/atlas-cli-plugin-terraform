@@ -5,7 +5,6 @@ version: 2
 
 before:
   hooks:
-    - go mod tidy
     - curl https://pgp.mongodb.com/atlas-cli.asc -o signature.asc
 
 builds:
