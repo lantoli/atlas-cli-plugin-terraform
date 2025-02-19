@@ -38,21 +38,15 @@ builds:
 archives:
   - id: linux
     builds: [linux]
-    wrap_in_directory: true
-    format: tar.gz
     <<: &archive_defaults
       files:
         - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
           dst: ./manifest.yml
   - id: macos
     builds: [macos]
-    format: zip
-    wrap_in_directory: false
     <<: *archive_defaults
   - id: windows
     builds: [windows]
-    format: zip
-    wrap_in_directory: false
     <<: *archive_defaults
 
 signs:
