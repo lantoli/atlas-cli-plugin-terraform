@@ -11,11 +11,13 @@ before:
 builds:
   - id: linux
     goos: [linux]
+    goarch: [amd64, arm64]
     <<: &build_defaults
       binary: ./binary
       main: ./cmd/plugin
   - id: macos
     goos: [darwin]
+    goarch: [amd64, arm64]
     <<: *build_defaults
     hooks:
       # This will notarize Apple binaries and replace goreleaser bins with the notarized ones
@@ -24,6 +26,8 @@ builds:
           output: true
   - id: windows
     goos: [windows]
+    goarch: [amd64]
+    goamd64: [v1]
     <<: *build_defaults
     hooks:
       # This will notarize the Windows binary and replace goreleaser bin with the notarized one
@@ -34,15 +38,21 @@ builds:
 archives:
   - id: linux
     builds: [linux]
+    wrap_in_directory: true
+    format: tar.gz
     <<: &archive_defaults
       files:
         - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
           dst: ./manifest.yml
   - id: macos
     builds: [macos]
+    format: zip
+    wrap_in_directory: false
     <<: *archive_defaults
   - id: windows
     builds: [windows]
+    format: zip
+    wrap_in_directory: false
     <<: *archive_defaults
 
 signs:
@@ -60,3 +70,14 @@ release:
   prerelease: auto
   extra_files:
     - glob: ./*.asc
+
+gomod: # https://goreleaser.com/customization/verifiable_builds/
+  # Proxy a module from proxy.golang.org, making the builds verifiable.
+  # This will only be effective if running against a tag. Snapshots will ignore
+  # this setting.
+  # Notice: for this to work your `build.main` must be a package, not a `.go` file.
+  proxy: false
+  # Sets the `-mod` flag value.
+  #
+  # Since: v1.7
+  mod: mod
