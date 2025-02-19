@@ -4,6 +4,9 @@ set -Eeou pipefail
 
 EXE_FILE="./dist/windows_windows_amd64_v1/binary.exe"
 
+echo "EXE_FILE: $EXE_FILE"
+echo "artifact: $artifact"
+
 if [[ -f "$EXE_FILE" ]]; then
 	echo "signing $EXE_FILE"
 

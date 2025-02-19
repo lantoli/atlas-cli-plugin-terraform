@@ -26,6 +26,9 @@ builds:
       post:
         - cmd: ./scripts/mac_notarize.sh
           output: true
+          env:
+            - artifact="{{ .Path }}"
+
   - id: windows
     goos: [windows]
     goarch: [amd64]
@@ -35,6 +38,8 @@ builds:
       post:
         - cmd: ./scripts/windows_notarize.sh
           output: true
+          env:
+            - artifact="{{ .Path }}"
 
 archives:
   - id: linux

@@ -2,6 +2,8 @@
 
 set -Eeou pipefail
 
+echo "artifact: $artifact"
+
 if [[ -f "./dist/macos_darwin_amd64_v1/binary" && -f "./dist/macos_darwin_arm64_v8.0/binary" && ! -f "./dist/mac_bin_signed.zip" ]]; then
 	echo "notarizing macOs binaries"
 
