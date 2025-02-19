@@ -22,14 +22,12 @@ builds:
   - id: windows
     goos: [windows]
     goarch: [amd64]
+    goamd64: [v1]
     <<: *build_defaults
     hooks:
-      # Notarize the Windows binary replacing the one created by goreleaser
-      post:
+      post: # Notarize the Windows binary replacing the one created by goreleaser
         - cmd: ./scripts/windows_notarize.sh
           output: true
-          env:
-            - artifact="{{ .Path }}"
 
 archives:
   - id: linux
