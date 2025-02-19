@@ -63,3 +63,6 @@ jobs:
           args: release --clean        
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTORY_REGISTRY: ${{ secrets.ARTIFACTORY_REGISTRY }}
+          ARTIFACTORY_SIGN_USER: ${{ secrets.ARTIFACTORY_SIGN_USER }}
+          ARTIFACTORY_SIGN_PASSWORD: ${{ secrets.ARTIFACTORY_SIGN_PASSWORD }}
