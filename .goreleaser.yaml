@@ -3,6 +3,11 @@ project_name: atlas-cli-plugin-terraform
 
 version: 2
 
+before:
+  hooks:
+    - go mod tidy
+    - curl https://pgp.mongodb.com/atlas-cli.asc -o atlas-cli.asc
+
 builds:
   - id: linux
     goos: [linux]
