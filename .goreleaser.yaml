@@ -6,10 +6,12 @@ version: 2
 builds:
   - id: linux
     goos: [linux]
-    binary: ./binary
+    <<: &build_defaults
+      binary: ./binary
+      main: ./cmd/plugin
   - id: macos
     goos: [darwin]
-    binary: ./binary
+    <<: *build_defaults
     hooks:
       # This will notarize Apple binaries and replace goreleaser bins with the notarized ones
       post:
@@ -17,7 +19,7 @@ builds:
           output: true
   - id: windows
     goos: [windows]
-    binary: ./binary
+    <<: *build_defaults
     hooks:
       # This will notarize the Windows binary and replace goreleaser bin with the notarized one
       post:
