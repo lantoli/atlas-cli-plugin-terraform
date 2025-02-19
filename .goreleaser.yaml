@@ -4,14 +4,52 @@ project_name: atlas-cli-plugin-terraform
 version: 2
 
 builds:
-  - id: "atlas-cli-plugin-terraform"
-    main: ./cmd/plugin/main.go
+  - id: linux
+    goos: [linux]
     binary: ./binary
+  - id: macos
+    goos: [darwin]
+    binary: ./binary
+    hooks:
+      # This will notarize Apple binaries and replace goreleaser bins with the notarized ones
+      post:
+        - cmd: ./scripts/mac_notarize.sh
+          output: true
+  - id: windows
+    goos: [windows]
+    binary: ./binary
+    hooks:
+      # This will notarize the Windows binary and replace goreleaser bin with the notarized one
+      post:
+        - cmd: ./scripts/windows_notarize.sh
+          output: true
 
 archives:
-  - files:
-      - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
-        dst: ./manifest.yml
+  - id: linux
+    builds: [linux]
+    <<: &archive_defaults
+      files:
+        - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
+          dst: ./manifest.yml
+  - id: macos
+    builds: [macos]
+    <<: *archive_defaults
+  - id: windows
+    builds: [windows]
+    <<: *archive_defaults
+
+signs:
+  - id: all_artifacts
+    signature: "${artifact}.sig"
+    cmd: "./scripts/notarize.sh"
+    ids:
+      - linux
+      - macos
+      - windows
+    artifacts: all
+    output: true
 
 release:
   prerelease: auto
+  extra_files:
+    - glob: ./*.asc
