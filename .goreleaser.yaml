@@ -15,26 +15,16 @@ builds:
     <<: &build_defaults
       binary: ./binary
       main: ./cmd/plugin
-      goamd64: [v1]
-      goarm64: [v8.0]
   - id: macos
     goos: [darwin]
     goarch: [amd64, arm64]
     <<: *build_defaults
-    hooks:
-      # This will notarize Apple binaries and replace goreleaser bins with the notarized ones
-      post:
-        - cmd: ./scripts/mac_notarize.sh
-          output: true
-          env:
-            - artifact="{{ .Path }}"
-
   - id: windows
     goos: [windows]
     goarch: [amd64]
     <<: *build_defaults
     hooks:
-      # This will notarize the Windows binary and replace goreleaser bin with the notarized one
+      # Notarize the Windows binary replacing the one created by goreleaser
       post:
         - cmd: ./scripts/windows_notarize.sh
           output: true
@@ -42,18 +32,9 @@ builds:
             - artifact="{{ .Path }}"
 
 archives:
-  - id: linux
-    builds: [linux]
-    <<: &archive_defaults
-      files:
-        - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
-          dst: ./manifest.yml
-  - id: macos
-    builds: [macos]
-    <<: *archive_defaults
-  - id: windows
-    builds: [windows]
-    <<: *archive_defaults
+  - files:
+      - src: './bin/manifest{{ if eq .Os "windows" }}.windows{{end}}.yml'
+        dst: ./manifest.yml
 
 signs:
   - id: all_artifacts
