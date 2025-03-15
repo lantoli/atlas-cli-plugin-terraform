@@ -1,9 +1,12 @@
 package clu2adv
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"strings"
 
+	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/fsnotify/fsnotify"
 	"github.com/mongodb-labs/atlas-cli-plugin-terraform/internal/convert"
 	"github.com/mongodb-labs/atlas-cli-plugin-terraform/internal/file"
@@ -53,6 +56,37 @@ func (o *opts) generateFile(allowParseErrors bool) error {
 			return err
 		}
 	}
+
+	promptPrefix := "# prompt: "
+	inStr := string(inConfig)
+	outStr := string(outConfig)
+	if strings.HasPrefix(inStr, promptPrefix) {
+		prompt := strings.SplitN(inStr, "\n", 2)[0][len(promptPrefix):]
+		promptOut := fmt.Sprintf(`
+			Input File: """%s"""
+			Output File: """%s"""
+			We want to transform the Input File that is an HCL Terraform file with mongodbatlas_cluster resources into an Output File that is also an HCL Terraform file with mongodbatlas_advanced_cluster resources.
+			We will ignore any resources that are not mongodbatlas_cluster or mongodbatlas_advanced_cluster and keep as it is.
+			Your response must be a valid HCL Terraform file, please make sure to keep the syntax correct and write in the content of the Output File using comments with the character #. Answer directly with the content of the HCL file, don't add your explanation of the task or hcl markdown tags to the output. You response must be a valid Terraform HCL configuration.
+			Pay attention, this is what I want you to do in the Output File: """%s""".
+		`, inStr, outStr, prompt)
+
+		client := anthropic.NewClient()
+		message, err := client.Messages.New(context.TODO(), anthropic.MessageNewParams{
+			Model:     anthropic.F(anthropic.ModelClaude3_7SonnetLatest),
+			MaxTokens: anthropic.F(int64(1024)),
+			Messages: anthropic.F([]anthropic.MessageParam{
+				anthropic.NewUserMessage(anthropic.NewTextBlock(promptOut)),
+			}),
+		})
+
+		if err == nil {
+			outConfig = []byte(message.Content[0].Text)
+		} else {
+			fmt.Println("Failed to get completion: ", err)
+		}
+	}
+
 	if err := afero.WriteFile(o.fs, o.output, outConfig, 0o600); err != nil {
 		return fmt.Errorf("failed to write file %s: %w", o.output, err)
 	}
