@@ -123,6 +123,35 @@ dynamic "replication_specs" {
 - [`num_shards`](https://registry.terraform.io/providers/mongodb/mongodbatlas/latest/docs/resources/cluster#num_shards-2) in `replication_specs` must be a numeric [literal expression](https://developer.hashicorp.com/nomad/docs/job-specification/hcl2/expressions#literal-expressions), e.g. `var.num_shards` is not supported. This is to allow creating a `replication_specs` element per shard in `mongodbatlas_advanced_cluster`. This limitation doesn't apply if you're using `dynamic` blocks in `regions_config` or `replication_specs`.
 - `dynamic` blocks are supported with some [limitations](./docs/guide_clu2adv_dynamic_block.md).
 
+## MCP Server: clu2adv as a Tool (LLM Integration)
+
+This plugin also exposes an [MCP server](https://github.com/mark3labs/mcp-go) for LLM and tool integration, allowing you to programmatically convert a `mongodbatlas_cluster` Terraform configuration to a `mongodbatlas_advanced_cluster` configuration.
+
+### Usage
+
+Run the MCP server:
+```bash
+atlas mcp
+```
+
+This will start an MCP server over stdio exposing a tool named `clu2adv`.
+
+#### clu2adv Tool
+- **Input:** `cluster_config` (string) — The Terraform configuration for the `mongodbatlas_cluster` resource.
+- **Output:** The converted `mongodbatlas_advanced_cluster` configuration as a string.
+
+Example MCP tool call:
+```json
+{
+  "tool": "clu2adv",
+  "arguments": {
+    "cluster_config": "resource \"mongodbatlas_cluster\" ..."
+  }
+}
+```
+
+The response will contain the converted configuration or an error message if the conversion fails.
+
 ## Feedback
 
 If you find any issues or have any suggestions, please open an [issue](https://github.com/mongodb-labs/atlas-cli-plugin-terraform/issues) in this repository.
