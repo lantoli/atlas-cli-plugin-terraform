@@ -78,7 +78,7 @@ func clu2advHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 		return nil, fmt.Errorf("cluster_config must be a string")
 	}
 
-	converted, err := convert.ClusterToAdvancedCluster([]byte(clusterConfig), false)
+	converted, err := convert.ClusterToAdvancedCluster([]byte(clusterConfig), true)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("conversion error: %v", err)), nil
 	}
