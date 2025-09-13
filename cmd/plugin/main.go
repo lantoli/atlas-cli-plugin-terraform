@@ -6,6 +6,7 @@ import (
 
 	"github.com/mongodb-labs/atlas-cli-plugin-terraform/internal/cli/adv2v2"
 	"github.com/mongodb-labs/atlas-cli-plugin-terraform/internal/cli/clu2adv"
+	"github.com/mongodb-labs/atlas-cli-plugin-terraform/internal/cli/web"
 	"github.com/spf13/cobra"
 )
 
@@ -17,6 +18,7 @@ func main() {
 	}
 	terraformCmd.AddCommand(clu2adv.Builder())
 	terraformCmd.AddCommand(adv2v2.Builder())
+	terraformCmd.AddCommand(web.Builder())
 
 	completionOption := &cobra.CompletionOptions{
 		DisableDefaultCmd:   true,

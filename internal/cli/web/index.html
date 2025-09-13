@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terraform Transformation Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00684a;
+            --primary-light: #00ed64;
+            --secondary: #023430;
+            --bg-dark: #001e2b;
+            --bg-light: #f9fbfa;
+            --text-dark: #1c2d38;
+            --text-light: #889397;
+            --border: #e8edeb;
+            --error: #ef4444;
+            --success: #10b981;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #e8f4f0 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 0;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin: 0 0 1rem 0;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .selector-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover {
+            border-color: var(--primary-light);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 104, 74, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .example-button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 104, 74, 0.2);
+        }
+
+        .example-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 104, 74, 0.3);
+        }
+
+        .example-button:active {
+            transform: translateY(0);
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            animation: fadeInUp 1s ease-out;
+            width: 100vw;
+        }
+
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .editor-box {
+            background: white;
+            border-radius: 0;
+            box-shadow: none;
+            border: 1px solid var(--border);
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .editor-box:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .editor-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .copy-button.copied {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        textarea {
+            padding: 1.5rem;
+            border: none;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            background: #fafafa;
+            color: var(--text-dark);
+            min-height: 500px;
+            height: auto;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        textarea:focus {
+            outline: none;
+            background: white;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-left: 4px solid var(--error);
+            color: var(--error);
+            padding: 1rem;
+            margin: 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-indicator.active {
+            background: var(--success);
+        }
+
+        .status-indicator.error {
+            background: var(--error);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loader.active {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Terraform Transformation Tool</h1>
+            <p class="subtitle">Convert MongoDB Atlas Terraform configurations between different formats</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="selector-group">
+                    <label for="transformation-type">Transformation Type</label>
+                    <select id="transformation-type">
+                        <option value="clu2adv">Cluster → Advanced Cluster (v2.0.0)</option>
+                        <option value="adv2v2">Advanced Cluster v1 → v2 (TPF)</option>
+                    </select>
+                </div>
+                <div class="checkbox-group" id="moved-option">
+                    <input type="checkbox" id="include-moved" checked>
+                    <label for="include-moved">Include moved blocks</label>
+                </div>
+                <button class="example-button" onclick="loadExample()">Load Example</button>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span>Status:</span>
+                    <span class="status-indicator active"></span>
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-box">
+                <div class="editor-header">
+                    <span>Source Configuration</span>
+                    <button class="copy-button" onclick="copyToClipboard('source-textarea', this)">Copy</button>
+                </div>
+                <textarea id="source-textarea" placeholder="Paste your Terraform configuration here..."></textarea>
+            </div>
+
+            <div class="editor-box">
+                <div class="editor-header">
+                    <span>Transformed Configuration</span>
+                    <button class="copy-button" onclick="copyToClipboard('destination-textarea', this)">Copy</button>
+                </div>
+                <div id="destination-container" style="flex: 1; display: flex; flex-direction: column;">
+                    <textarea id="destination-textarea" placeholder="Transformation will appear here..."
+                        readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let transformTimeout;
+        const sourceTextarea = document.getElementById('source-textarea');
+        const destinationTextarea = document.getElementById('destination-textarea');
+        const destinationContainer = document.getElementById('destination-container');
+        const transformationType = document.getElementById('transformation-type');
+        const includeMoved = document.getElementById('include-moved');
+        const movedOption = document.getElementById('moved-option');
+        const statusIndicator = document.querySelector('.status-indicator');
+        const loader = document.querySelector('.loader');
+
+        // Example configurations
+        const examples = {
+            'clu2adv': `resource "mongodbatlas_cluster" "this" {
+project_id                  = var.project_id
+  name                        = "this"
+  cluster_type                = "SHARDED"
+  provider_name               = "AWS"
+  provider_instance_size_name = "M10"
+  replication_specs {
+    num_shards = 1
+    regions_config {
+      region_name     = "US_EAST_1"
+      electable_nodes = 3
+      priority        = 7
+    }
+  }
+  tags {
+    key   = "env"
+    value = "dev"
+  }
+}`,
+            'adv2v2': `resource "mongodbatlas_advanced_cluster" "this" {
+   project_id   = var.project_id
+  name         = "this"
+  cluster_type = "SHARDED"
+  replication_specs {
+    region_configs {
+      priority      = 7
+      provider_name = "AWS"
+      region_name   = "US_EAST_1"
+      electable_specs {
+        instance_size = "M10"
+        node_count    = 3
+      }
+    }
+  }
+  tags {
+    key   = "env"
+    value = "dev"
+  }
+}
+`
+        };
+
+        // Show/hide moved blocks option based on transformation type
+        transformationType.addEventListener('change', () => {
+            if (transformationType.value === 'clu2adv') {
+                movedOption.style.display = 'flex';
+            } else {
+                movedOption.style.display = 'none';
+            }
+            performTransformation();
+        });
+
+        // Real-time transformation on input
+        sourceTextarea.addEventListener('input', () => {
+            clearTimeout(transformTimeout);
+            transformTimeout = setTimeout(performTransformation, 300);
+        });
+
+        // Transform on checkbox change
+        includeMoved.addEventListener('change', performTransformation);
+
+        async function performTransformation() {
+            const source = sourceTextarea.value.trim();
+
+            if (!source) {
+                destinationTextarea.value = '';
+                clearError();
+                return;
+            }
+
+            // Show loading state
+            loader.classList.add('active');
+            statusIndicator.classList.remove('error');
+            statusIndicator.classList.add('active');
+
+            try {
+                const response = await fetch('/api/transform', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: transformationType.value,
+                        source: source,
+                        includeMoved: includeMoved.checked
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    destinationTextarea.value = '';
+                } else {
+                    clearError();
+                    destinationTextarea.value = data.result;
+                }
+            } catch (error) {
+                showError('Failed to connect to server: ' + error.message);
+                statusIndicator.classList.add('error');
+                statusIndicator.classList.remove('active');
+            } finally {
+                loader.classList.remove('active');
+            }
+        }
+
+        function showError(message) {
+            // Remove existing error if any
+            clearError();
+
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = 'Error: ' + message;
+            destinationContainer.insertBefore(errorDiv, destinationTextarea);
+
+            statusIndicator.classList.add('error');
+            statusIndicator.classList.remove('active');
+        }
+
+        function clearError() {
+            const existingError = destinationContainer.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            statusIndicator.classList.remove('error');
+            statusIndicator.classList.add('active');
+        }
+
+        async function copyToClipboard(textareaId, button) {
+            const textarea = document.getElementById(textareaId);
+            const text = textarea.value;
+
+            if (!text) return;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+        }
+
+        // Check server health on load
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    statusIndicator.classList.add('active');
+                }
+            } catch (error) {
+                statusIndicator.classList.add('error');
+            }
+        }
+
+        // Load example function
+        function loadExample() {
+            const exampleConfig = examples[transformationType.value];
+            if (exampleConfig) {
+                sourceTextarea.value = exampleConfig;
+                autoResizeTextarea(sourceTextarea);
+                performTransformation();
+            }
+        }
+
+        // Auto-resize textarea function
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        // Initialize textareas auto-resize
+        function initializeTextareas() {
+            autoResizeTextarea(sourceTextarea);
+            autoResizeTextarea(destinationTextarea);
+
+            // Add auto-resize on input for source
+            sourceTextarea.addEventListener('input', function () {
+                autoResizeTextarea(this);
+            });
+        }
+
+        // Update performTransformation to also resize destination
+        const originalPerformTransformation = performTransformation;
+        performTransformation = async function () {
+            await originalPerformTransformation();
+            setTimeout(() => {
+                autoResizeTextarea(destinationTextarea);
+            }, 100);
+        };
+
+        // Initialize
+        checkHealth();
+        initializeTextareas();
+    </script>
+</body>
+
+</html>
